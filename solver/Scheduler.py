@@ -43,6 +43,19 @@ def solve_fcfs(processes, switchingtime):
         s.TimeList.append((currentWorkingProcess.ID,currentWorkingProcess.burstTime))
     return s
 
+
+def addCommingProcess(allProcess, currentProcessList,count,time):
+    # move on comming processes appending all new processes w.r.t s.Time (current time slot)
+    currentProcess = allProcess[count]
+    time = np.round(time,decimals=1)
+    while (currentProcess.arrivalTime <= time) and count <len(allProcess):
+        currentProcessList.append(currentProcess)
+        count += 1
+        if count < len(allProcess):
+            currentProcess = allProcess[count]
+    return currentProcessList,count
+
+
 NOPTime = 0.1
 
 def HDFProcessOne(s,listProcess,switchingTime):
@@ -65,13 +78,7 @@ def HPF(processes, switchingTime):
     listProcess = []
     i = 0
     while i <len(processes):
-        currentProcess = processes[i]
-
-        # move on comming processes appending all new processes w.r.t s.Time (current time slot)
-        while (currentProcess.arrivalTime <= s.Time and i < len(processes)): # [TODO] i < len(processes) | len(listProcess), considering old code this was len(lines) which is now len(processes)
-            currentProcess = processes[i]
-            listProcess.append(currentProcess)
-            i += 1
+        listProcess, i = addCommingProcess(processes,listProcess,i,s.Time)
 
         if len(listProcess):
             listProcess.sort(key=lambda x: x.priority, reverse=True)
@@ -80,7 +87,6 @@ def HPF(processes, switchingTime):
             s.TimeList.append((-1,NOPTime))
             s.Time += NOPTime
 
-    # [TODO]: do we really need it, i think above nested while loop will handle all processes
     if len(listProcess):
         listProcess.sort(key=lambda x: x.priority, reverse=True)
         for i in range(len(listProcess)):
@@ -122,20 +128,7 @@ def RR(processes,switchingTime,q):
     i = 0
     toAppend = []
     while i <len(processes):
-        # listLine = lines[i].split(" ")
-        currentProcess = processes[i]
-        # ID, arrivalTime, burstTime, priority = float(listLine[0]), float(listLine[1]), float(listLine[2]), float(listLine[3])
-        s.Time = np.round(s.Time,decimals=1)
-        # while (arrivalTime<=s.Time) and i <len(processes):
-        while (currentProcess.arrivalTime <= s.Time) and i <len(processes):
-            # p = Process(ID, arrivalTime, burstTime, priority)
-            # listProcess.append(p)
-            listProcess.append(currentProcess)
-            i += 1
-            if i < len(processes):
-                currentProcess = processes[i]
-                # listLine = lines[i].split(" ")
-                # ID, arrivalTime, burstTime, priority = float(listLine[0]), float(listLine[1]), float(listLine[2]), float(listLine[3])
+        listProcess, i = addCommingProcess(processes,listProcess,i,s.Time)
 
         listProcess.extend(toAppend)
 
@@ -144,6 +137,7 @@ def RR(processes,switchingTime,q):
         else:
             s.TimeList.append((-1,NOPTime))
             s.Time += NOPTime
+
     listProcess.extend(toAppend)
     while len(listProcess):
         toAppend = RRProcessOne(s,listProcess,q,switchingTime)
@@ -184,17 +178,12 @@ def SRTN(processes,switchingtime):
     listProcess = []
     lastProcessID = 0
     i = 0
+    
     while i <len(processes):
-        currentProcess = processes[i]
-        s.Time = np.round(s.Time,decimals=1)
-        while (currentProcess.arrivalTime <= s.Time and i < len(processes)):
-            currentProcess = processes[i]
-            i += 1
-            listProcess.append(currentProcess)
+        listProcess, i = addCommingProcess(processes,listProcess,i,s.Time)
 
         if len(listProcess):
             lastProcessID = SRTNProcessOne(s,listProcess,lastProcessID,switchingtime)
-
         else:
             s.TimeList.append((-1,NOPTime))
             lastProcessID = -1
@@ -236,11 +225,13 @@ def CalcStatistics(s):
     '''
     sumTurnaroundTime = 0
     sumWeightedTurnaround = 0
+    s.finishedList.sort(key= lambda x: x.ID)
     f = open('stat.txt', 'w')
     f.write('ID\t\twaitingTime\t\tTAT\t\tWTAT\n')
     for process in s.finishedList:
-        waitingTime = process.startWorkingTime - process.arrivalTime
         turnaroundTime = process.finishTime - process.arrivalTime
+        # waitingTime = process.startWorkingTime - process.arrivalTime
+        waitingTime = turnaroundTime - process.totalBurstTime
         weightedTurnaround = turnaroundTime / process.totalBurstTime
         sumTurnaroundTime += turnaroundTime
         sumWeightedTurnaround += weightedTurnaround
