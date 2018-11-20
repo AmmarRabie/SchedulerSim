@@ -1,0 +1,2 @@
+set root=%cd%
+cd solver/ & buildExe.bat & cd %root% & cd generator/ & buildExe.bat & cd %root% & copy /Y solver\Scheduler.exe gui\SchedulingSim\bin\Debug\ & copy /Y generator\Generator.exe gui\SchedulingSim\bin\Debug\ & pause & cd gui\SchedulingSim\bin\Debug\ & SchedulingSim.exe & exit

@@ -1,0 +1,1 @@
+cd gui\SchedulingSim\bin\Debug\ & SchedulingSim.exe & exit
