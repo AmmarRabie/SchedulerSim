@@ -203,16 +203,26 @@ def drawGraph(s, show=False):
     '''
     x = [0]
     y = [0]
+    w = [0]
     s.TimeList.insert(0, (0,0))
     s.TimeList.append((0,0))
-    for one in s.TimeList:#[:40]:
+    # for one in s.TimeList:#[:40]:
 
-        y.append(one[0])
-        x.append(x[-1])
+    #     y.append(one[0])
+    #     x.append(x[-1])
         
-        x.append(x[-1]+one[1])
-        y.append(y[-1])
-    plt.plot(np.round(np.array(x),decimals=1),np.round(np.array(y),decimals=1))
+    #     x.append(x[-1]+one[1])
+    #     y.append(y[-1])
+    # plt.plot(np.round(np.array(x),decimals=1),np.round(np.array(y),decimals=1))
+    accX = 0
+    for one in s.TimeList:#[:40]:
+        accX += one[1]
+        if one[0] != -1:
+            y.append(one[0])
+            x.append(accX)
+            w.append(-one[1])
+    plt.bar(x, y, width= w, align='edge', color=np.random.randint(0,255,(len(w),3))/255.0)
+
     plt.savefig("image.png")
     plt.show() if show else None
     return "image.png"
@@ -265,7 +275,7 @@ def readProcessesLines(filePath):
 def readArguments():
     argc = len(argv)
     if (argc != 4 and argc != 5):
-        print('args is not correct, should be 3 or 4 -> found', argc - 1, argv, file=stderr)
+        print('args is not correct, should be 3 or 4 -> found', argc - 1, argv)#, file=stderr)
         return
     algoName, inputPath, switchingtime= argv[1], argv[2], argv[3]
     q = None
@@ -288,7 +298,7 @@ def main():
     algoName, inputPath, switchingtime, q = readArguments()
     impl = getImplFromName(algoName)
     if(not impl):
-        print('there is no impl for specified args', argv, file=stderr)
+        print('there is no impl for specified args', argv)#, file=stderr)
         raise Exception("No such algo")
 
     lines = readProcessesLines(inputPath)
